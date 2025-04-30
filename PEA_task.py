@@ -4,7 +4,7 @@ import requests
 from collections import Counter
 from io import StringIO
 import re
-from ftfy import fix_text  # ✅ ใช้แก้ mojibake ขั้นสุด
+from ftfy import fix_text  # ✅ สำหรับแก้ภาษาไทยเพี้ยน
 
 # 🔁 แปลง Google Sheet URL → export CSV URL
 def convert_to_csv_url(google_sheet_url):
@@ -17,7 +17,7 @@ def convert_to_csv_url(google_sheet_url):
     except:
         return None
 
-# 📥 โหลดข้อมูลจาก Google Sheet แบบไม่มี header และจัดการ encoding
+# 📥 โหลด Google Sheet และใช้ engine="python" + fix_text
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
@@ -28,8 +28,7 @@ def read_google_sheet(sheet_url):
             StringIO(response.text),
             encoding="utf-8",
             header=None,
-            engine="python",
-            errors="replace"
+            engine="python"
         )
 
         df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
@@ -42,9 +41,9 @@ def read_google_sheet(sheet_url):
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         return None
 
-# ========================
-# 🧠 ส่วนหลักของแอป Streamlit
-# ========================
+# ============================
+# 🎯 ส่วนหลักของแอป Streamlit
+# ============================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
 sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer)")
@@ -63,7 +62,7 @@ if sheet_url:
             else:
                 all_tasks = []
                 for row in df_emp["รายการงานที่ทำ"].dropna():
-                    row = fix_text(row)  # ✅ ใช้ ftfy แก้ภาษาไทยเพี้ยน
+                    row = fix_text(row)  # ✅ แก้ mojibake
                     tasks = [t.strip() for t in row.split(',') if t.strip()]
                     all_tasks.extend(tasks)
 
