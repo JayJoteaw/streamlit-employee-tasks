@@ -4,7 +4,7 @@ import requests
 from collections import Counter
 from io import StringIO
 import re
-from ftfy import fix_text  # ✅ สำหรับแก้ภาษาไทยเพี้ยน
+from ftfy import fix_text  # ✅ แก้ภาษาไทยเพี้ยน
 
 # 🔁 แปลง Google Sheet URL → export CSV URL
 def convert_to_csv_url(google_sheet_url):
@@ -17,7 +17,7 @@ def convert_to_csv_url(google_sheet_url):
     except:
         return None
 
-# 📥 โหลด Google Sheet และใช้ engine="python" + fix_text
+# 📥 โหลด Google Sheet + จัดการ encoding
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
@@ -34,7 +34,7 @@ def read_google_sheet(sheet_url):
         df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
         df_clean = df_raw.drop(index=[0, 1]).reset_index(drop=True)
 
-        st.success("✅ โหลดสำเร็จ: ใช้ engine='python' และใช้ ftfy แก้ภาษาเพี้ยน")
+        st.success("✅ โหลดสำเร็จ: ใช้ engine='python' + ftfy + regex แยกหัวข้องาน")
         return df_clean
 
     except Exception as e:
@@ -42,7 +42,7 @@ def read_google_sheet(sheet_url):
         return None
 
 # ============================
-# 🎯 ส่วนหลักของแอป Streamlit
+# 🧠 ส่วนหลักของแอป Streamlit
 # ============================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
@@ -63,7 +63,7 @@ if sheet_url:
                 all_tasks = []
                 for row in df_emp["รายการงานที่ทำ"].dropna():
                     row = fix_text(row)  # ✅ แก้ mojibake
-                    tasks = [t.strip() for t in row.split(',') if t.strip()]
+                    tasks = [t.strip() for t in re.split(r',\s*', row) if t.strip()]  # ✅ split แม่นยำ
                     all_tasks.extend(tasks)
 
                 count = Counter(all_tasks)
