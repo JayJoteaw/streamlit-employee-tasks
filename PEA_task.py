@@ -5,22 +5,19 @@ from collections import Counter
 import re
 from io import StringIO
 
+# 🔁 ฟังก์ชันแปลงลิงก์ Google Sheet ให้กลายเป็น CSV URL
 def convert_to_csv_url(google_sheet_url):
-    """
-    แปลง Google Sheet URL ให้เป็นลิงก์ CSV ที่โหลดได้
-    """
-    match = re.match(r'https://docs.google.com/spreadsheets/d/([a-zA-Z0-9-_]+)', google_sheet_url)
-    if match:
+    try:
+        match = re.search(r'/d/([a-zA-Z0-9-_]+)', google_sheet_url)
         sheet_id = match.group(1)
         gid_match = re.search(r'gid=([0-9]+)', google_sheet_url)
         gid = gid_match.group(1) if gid_match else '0'
         return f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}'
-    return None
+    except:
+        return None
 
+# 📥 โหลดข้อมูลจาก CSV URL
 def read_google_sheet(sheet_url):
-    """
-    อ่านข้อมูลจาก Google Sheet ที่แชร์แบบสาธารณะโดยใช้ requests
-    """
     csv_url = convert_to_csv_url(sheet_url)
     try:
         response = requests.get(csv_url)
@@ -31,12 +28,11 @@ def read_google_sheet(sheet_url):
         return None
 
 # ======================
-# ส่วนของ Streamlit App
+# 🎯 ส่วนของ Streamlit UI
 # ======================
-
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
-sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (viewer ได้ก็พอ)")
+sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer ได้ก็พอ)")
 
 if sheet_url:
     df = read_google_sheet(sheet_url)
@@ -57,4 +53,6 @@ if sheet_url:
                 count = Counter(work_items)
 
                 st.subheader(f"พนักงานรหัส {emp_id} ทำงานทั้งหมด {sum(count.values())} ครั้ง")
-                st.dataframe(pd.DataFrame(count.items(), columns=["หัวข้องาน", "จำนวนครั้ง"]).sort_values(by="จำนวนครั้ง", ascending=False))
+                st.dataframe(
+                    pd.DataFrame(count.items(), columns=["หัวข้องาน", "จำนวนครั้ง"]).sort_values(by="จำนวนครั้ง", ascending=False)
+                )
