@@ -63,8 +63,8 @@ if sheet_url:
                 all_tasks = []
                 # ✅ เก็บหัวข้องานจากทุก row
                 for row in df_emp["รายการงานที่ทำ"].dropna():
-                    row = fix_text(row)  # แก้ mojibake ถ้ามี
-                    # ✅ ใช้ re.split ที่รองรับ comma และเว้นวรรค
+                    row = fix_text(row)
+                    # ✅ แยกด้วย re.split ที่รองรับ comma และเว้นวรรค
                     tasks = [t.strip() for t in re.split(r'\s*,\s*', row) if t.strip()]
                     all_tasks.extend(tasks)
 
