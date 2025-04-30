@@ -64,7 +64,8 @@ if sheet_url:
                 # ✅ เก็บหัวข้องานจากทุก row
                 for row in df_emp["รายการงานที่ทำ"].dropna():
                     row = fix_text(row)  # แก้ mojibake ถ้ามี
-                    tasks = [t.strip() for t in row.split(',') if t.strip()]  # ใช้ split แยกหัวข้องาน
+                    # ✅ ใช้ re.split ที่รองรับ comma และเว้นวรรค
+                    tasks = [t.strip() for t in re.split(r'[\s,]+', row) if t.strip()]
                     all_tasks.extend(tasks)
 
                 # ✅ นับจำนวนหัวข้องาน
