@@ -5,7 +5,7 @@ from collections import Counter
 from io import StringIO
 import re
 
-# 🔁 แปลงลิงก์ Google Sheet → export CSV
+# 🔁 แปลงลิงก์ Google Sheet → CSV export link
 def convert_to_csv_url(google_sheet_url):
     try:
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', google_sheet_url)
@@ -16,32 +16,38 @@ def convert_to_csv_url(google_sheet_url):
     except Exception:
         return None
 
-# 📥 โหลดข้อมูลจาก Google Sheet โดยลอง header หลายแบบ
+# 📥 โหลด Google Sheet พร้อมลอง encoding/header หลายแบบ
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
         response = requests.get(csv_url)
         response.raise_for_status()
-        
-        for header_row in [0, 1, 2]:
-            df = pd.read_csv(StringIO(response.text), encoding="utf-8-sig", header=header_row)
-            df.columns = df.columns.str.strip()
-            if "รหัสพนักงาน" in df.columns and "รายการงานที่ทำ" in df.columns:
-                st.success(f"✅ ใช้ header row: {header_row}")
-                return df
-        
+
+        encodings = ["utf-8-sig", "iso-8859-11", "tis-620"]
+        for enc in encodings:
+            for header_row in [0, 1, 2]:
+                try:
+                    df = pd.read_csv(StringIO(response.text), encoding=enc, header=header_row)
+                    df.columns = df.columns.str.strip()
+                    if "รหัสพนักงาน" in df.columns and "รายการงานที่ทำ" in df.columns:
+                        st.success(f"✅ ใช้ header={header_row}, encoding='{enc}'")
+                        return df
+                except Exception:
+                    continue
+
         st.error("❌ ไม่พบคอลัมน์ 'รหัสพนักงาน' หรือ 'รายการงานที่ทำ'")
-        st.write("🧾 คอลัมน์ที่พบ:", df.columns.tolist())
-        st.dataframe(df.head(5))
+        df_preview = pd.read_csv(StringIO(response.text), header=None)
+        st.write("🧾 คอลัมน์ที่ pandas เห็น:", df_preview.columns.tolist())
+        st.dataframe(df_preview.head(5))
         return None
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         return None
 
-# ========================
-# 🎯 ส่วนแสดงผลบน Streamlit
-# ========================
+# ======================
+# 🧠 Main Streamlit App
+# ======================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
 sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer)")
