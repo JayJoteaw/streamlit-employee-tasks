@@ -6,6 +6,7 @@ from io import StringIO
 import re
 from ftfy import fix_text  # สำหรับแก้ mojibake
 
+# 🔁 แปลงลิงก์ Google Sheet เป็นลิงก์ CSV
 def convert_to_csv_url(google_sheet_url):
     try:
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', google_sheet_url)
@@ -16,6 +17,7 @@ def convert_to_csv_url(google_sheet_url):
     except:
         return None
 
+# 📥 โหลด Google Sheet และจัดการ encoding เพี้ยน
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
@@ -58,15 +60,16 @@ if sheet_url:
             if df_emp.empty:
                 st.warning("ไม่พบรหัสพนักงานนี้ในข้อมูล")
             else:
-                # ✅ เก็บรายการงานจากทุก row
-                work_items = []
+                all_tasks = []
+                # ✅ เก็บหัวข้องานจากทุก row
                 for row in df_emp["รายการงานที่ทำ"].dropna():
                     row = fix_text(row)  # แก้ mojibake ถ้ามี
-                    tasks = [t.strip() for t in row.split(',') if t.strip()]
-                    work_items.extend(tasks)
+                    # ✅ แยกด้วย re.split ที่รองรับ whitespace และ line breaks
+                    tasks = [t.strip() for t in re.split(r'[\s,]+', row) if t.strip()]
+                    all_tasks.extend(tasks)
 
                 # ✅ นับจำนวนหัวข้องาน
-                count = Counter(work_items)
+                count = Counter(all_tasks)
 
                 st.subheader(f"พนักงานรหัส {emp_id} ทำงานทั้งหมด {sum(count.values())} ครั้ง")
                 st.dataframe(
