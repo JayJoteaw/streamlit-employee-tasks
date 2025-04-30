@@ -1,10 +1,14 @@
 import streamlit as st
 import pandas as pd
+import requests
 from collections import Counter
 import re
+from io import StringIO
 
-# ฟังก์ชันแปลง Google Sheets URL ให้กลายเป็นลิงก์ CSV ที่ pandas ใช้ได้
 def convert_to_csv_url(google_sheet_url):
+    """
+    แปลง Google Sheet URL ให้เป็นลิงก์ CSV ที่โหลดได้
+    """
     match = re.match(r'https://docs.google.com/spreadsheets/d/([a-zA-Z0-9-_]+)', google_sheet_url)
     if match:
         sheet_id = match.group(1)
@@ -13,17 +17,26 @@ def convert_to_csv_url(google_sheet_url):
         return f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}'
     return None
 
-# ฟังก์ชันโหลดข้อมูลจากลิงก์ CSV
 def read_google_sheet(sheet_url):
+    """
+    อ่านข้อมูลจาก Google Sheet ที่แชร์แบบสาธารณะโดยใช้ requests
+    """
     csv_url = convert_to_csv_url(sheet_url)
-    if csv_url:
-        return pd.read_csv(csv_url, encoding="utf-8-sig")
-    return None
+    try:
+        response = requests.get(csv_url)
+        response.raise_for_status()
+        return pd.read_csv(StringIO(response.text), encoding="utf-8-sig")
+    except Exception as e:
+        st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
+        return None
 
-# ==== เริ่มต้น UI Streamlit ====
+# ======================
+# ส่วนของ Streamlit App
+# ======================
+
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
-sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์ให้เข้าถึงได้ (Anyone with the link)")
+sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (viewer ได้ก็พอ)")
 
 if sheet_url:
     df = read_google_sheet(sheet_url)
@@ -45,5 +58,3 @@ if sheet_url:
 
                 st.subheader(f"พนักงานรหัส {emp_id} ทำงานทั้งหมด {sum(count.values())} ครั้ง")
                 st.dataframe(pd.DataFrame(count.items(), columns=["หัวข้องาน", "จำนวนครั้ง"]).sort_values(by="จำนวนครั้ง", ascending=False))
-    else:
-        st.error("❌ ไม่สามารถโหลดข้อมูลจากลิงก์ได้ กรุณาตรวจสอบลิงก์ว่าแชร์ถูกต้องหรือไม่")
