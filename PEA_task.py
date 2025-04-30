@@ -32,13 +32,16 @@ def read_google_sheet(sheet_url):
         df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
         df_clean = df_raw.drop(index=[0, 1]).reset_index(drop=True)
 
-        st.success("✅ โหลดสำเร็จ: ใช้ engine='python' + ftfy + regex แยกหัวข้องาน")
+        st.success("✅ โหลดสำเร็จ: ใช้ engine='python' + ftfy แก้ภาษาเพี้ยน")
         return df_clean
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         return None
 
+# ============================
+# 🎯 ส่วนหลักของแอป Streamlit
+# ============================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
 sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer)")
@@ -55,13 +58,15 @@ if sheet_url:
             if df_emp.empty:
                 st.warning("ไม่พบรหัสพนักงานนี้ในข้อมูล")
             else:
-                all_tasks = []
+                # ✅ เก็บรายการงานจากทุก row
+                work_items = []
                 for row in df_emp["รายการงานที่ทำ"].dropna():
-                    row = fix_text(row)
-                    tasks = [t.strip() for t in re.split(r'\s*,\s*', row) if t.strip()]  # ✅ ใช้ re.split แยกหัวข้องาน
-                    all_tasks.extend(tasks)
+                    row = fix_text(row)  # แก้ mojibake ถ้ามี
+                    tasks = [t.strip() for t in row.split(',') if t.strip()]
+                    work_items.extend(tasks)
 
-                count = Counter(all_tasks)
+                # ✅ นับจำนวนหัวข้องาน
+                count = Counter(work_items)
 
                 st.subheader(f"พนักงานรหัส {emp_id} ทำงานทั้งหมด {sum(count.values())} ครั้ง")
                 st.dataframe(
