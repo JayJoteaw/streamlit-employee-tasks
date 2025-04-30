@@ -5,7 +5,14 @@ from collections import Counter
 from io import StringIO
 import re
 
-# 🔁 แปลงลิงก์ Google Sheet → export CSV
+# ✅ ฟังก์ชันแก้ภาษาไทยเพี้ยน (mojibake)
+def decode_mojibake(text):
+    try:
+        return text.encode('latin1').decode('tis-620')
+    except:
+        return text
+
+# 🔁 แปลง Google Sheet URL → export CSV URL
 def convert_to_csv_url(google_sheet_url):
     try:
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', google_sheet_url)
@@ -16,32 +23,35 @@ def convert_to_csv_url(google_sheet_url):
     except Exception:
         return None
 
-# 📥 อ่าน Google Sheet แบบไม่มี header แล้วดึงแถวที่ 1 เป็นชื่อคอลัมน์
+# 📥 โหลดและแก้ไข header ภาษาเพี้ยน
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
         response = requests.get(csv_url)
         response.raise_for_status()
 
-        # 🧠 อ่านแบบไม่มี header
         df_raw = pd.read_csv(StringIO(response.text), encoding="utf-8-sig", header=None)
 
-        # ใช้แถวที่ 1 (index 1) เป็น header
-        df_raw.columns = df_raw.iloc[1].astype(str).str.strip()
-        df_raw = df_raw.drop(index=[0, 1]).reset_index(drop=True)
+        # 🔁 ใช้แถวที่ 1 เป็น header (index 1) และแก้ mojibake
+        raw_header = df_raw.iloc[1]
+        fixed_header = [decode_mojibake(str(col)).strip() for col in raw_header]
+        df_raw.columns = fixed_header
 
-        # DEBUG
-        st.success("✅ โหลดสำเร็จ: ใช้แถวที่ 2 เป็นหัวตาราง")
-        st.write("🧾 คอลัมน์ที่ใช้:", df_raw.columns.tolist())
-        return df_raw
+        # ❌ ลบแถว 0 และ 1 (ข้อมูลไม่ใช่เนื้อหา)
+        df_clean = df_raw.drop(index=[0, 1]).reset_index(drop=True)
+
+        st.success("✅ โหลดสำเร็จ: ใช้แถวที่ 2 เป็นหัวตาราง และแก้ภาษาไทยเพี้ยนแล้ว")
+        st.write("📌 คอลัมน์ที่ใช้:", df_clean.columns.tolist())
+
+        return df_clean
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         return None
 
-# ============================
-# 🧠 ส่วนหลักของแอป Streamlit
-# ============================
+# ===============================
+# 🎯 ส่วนแสดงผล Streamlit หลัก
+# ===============================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
 sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer)")
