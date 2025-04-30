@@ -5,6 +5,7 @@ from collections import Counter
 from io import StringIO
 import re
 
+# 🔁 แปลงลิงก์ Google Sheet ให้โหลดแบบ CSV ได้
 def convert_to_csv_url(google_sheet_url):
     try:
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', google_sheet_url)
@@ -12,22 +13,25 @@ def convert_to_csv_url(google_sheet_url):
         gid_match = re.search(r'gid=([0-9]+)', google_sheet_url)
         gid = gid_match.group(1) if gid_match else '0'
         return f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}'
-    except Exception as e:
+    except Exception:
         return None
 
+# 📥 โหลด Google Sheet (Google Form Support: header=1)
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
         response = requests.get(csv_url)
         response.raise_for_status()
-        df = pd.read_csv(StringIO(response.text), encoding="utf-8-sig")
-        df.columns = df.columns.str.strip()  # 💡 ป้องกันช่องว่างในชื่อหัวตาราง
+        df = pd.read_csv(StringIO(response.text), encoding="utf-8-sig", header=1)  # 👈 ข้ามแถวแรก
+        df.columns = df.columns.str.strip()  # 💡 ล้าง space ซ่อน
         return df
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         return None
 
-# ========= APP =========
+# ================================
+# 🧠 ส่วนหลักของแอป Streamlit
+# ================================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
 sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer)")
