@@ -4,13 +4,7 @@ import requests
 from collections import Counter
 from io import StringIO
 import re
-
-# ✅ แก้ภาษาไทยเพี้ยน (Mojibake)
-def decode_mojibake(text):
-    try:
-        return text.encode('latin1').decode('tis-620')
-    except:
-        return text
+from ftfy import fix_text  # ✅ ใช้แก้ mojibake ขั้นสุด
 
 # 🔁 แปลง Google Sheet URL → export CSV URL
 def convert_to_csv_url(google_sheet_url):
@@ -23,23 +17,25 @@ def convert_to_csv_url(google_sheet_url):
     except:
         return None
 
-# 📥 โหลดข้อมูลจาก Google Sheet แบบไม่มี header แล้วแมปเอง
+# 📥 โหลดข้อมูลจาก Google Sheet แบบไม่มี header และจัดการ encoding
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
         response = requests.get(csv_url)
         response.raise_for_status()
 
-        # อ่านแบบไม่มี header
-        df_raw = pd.read_csv(StringIO(response.text), encoding="utf-8-sig", header=None)
+        df_raw = pd.read_csv(
+            StringIO(response.text),
+            encoding="utf-8",
+            header=None,
+            engine="python",
+            errors="replace"
+        )
 
-        # ตั้งชื่อคอลัมน์เอง (จากตำแหน่ง): A=เวลา, B=รหัส, C=รายการงานที่ทำ
         df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
-
-        # ลบแถวหัวตารางของ Google Form (index 0 และ 1)
         df_clean = df_raw.drop(index=[0, 1]).reset_index(drop=True)
 
-        st.success("✅ โหลดสำเร็จ: ใช้คอลัมน์จากตำแหน่ง และแก้ภาษาไทยเพี้ยน")
+        st.success("✅ โหลดสำเร็จ: ใช้ engine='python' และใช้ ftfy แก้ภาษาเพี้ยน")
         return df_clean
 
     except Exception as e:
@@ -47,7 +43,7 @@ def read_google_sheet(sheet_url):
         return None
 
 # ========================
-# 🧠 ส่วนหลักของแอป
+# 🧠 ส่วนหลักของแอป Streamlit
 # ========================
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
@@ -65,10 +61,9 @@ if sheet_url:
             if df_emp.empty:
                 st.warning("ไม่พบรหัสพนักงานนี้ในข้อมูล")
             else:
-                # ✅ แก้ภาษาไทยเพี้ยนใน cell และนับทุกหัวข้อย่อย
                 all_tasks = []
                 for row in df_emp["รายการงานที่ทำ"].dropna():
-                    row = decode_mojibake(row)
+                    row = fix_text(row)  # ✅ ใช้ ftfy แก้ภาษาไทยเพี้ยน
                     tasks = [t.strip() for t in row.split(',') if t.strip()]
                     all_tasks.extend(tasks)
 
