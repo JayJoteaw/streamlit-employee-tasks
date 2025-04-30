@@ -4,22 +4,21 @@ import requests
 from collections import Counter
 from io import StringIO
 import re
-import urllib.parse
 
-# 🔁 ฟังก์ชันแปลงลิงก์ Google Sheet → CSV ที่โหลดได้
+# 🔁 แปลง Google Sheet URL เป็น CSV export URL
 def convert_to_csv_url(google_sheet_url):
     try:
-        parsed = urllib.parse.urlparse(google_sheet_url)
-        base_url = parsed.scheme + "://" + parsed.netloc + parsed.path
-        match = re.search(r'/d/([a-zA-Z0-9-_]+)', base_url)
+        match = re.search(r'/d/([a-zA-Z0-9-_]+)', google_sheet_url)
         sheet_id = match.group(1)
+
         gid_match = re.search(r'gid=([0-9]+)', google_sheet_url)
         gid = gid_match.group(1) if gid_match else '0'
+
         return f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}'
     except Exception as e:
         return None
 
-# 📥 โหลดข้อมูล Google Sheet จาก CSV URL
+# 📥 โหลดข้อมูลจาก Google Sheet
 def read_google_sheet(sheet_url):
     csv_url = convert_to_csv_url(sheet_url)
     try:
@@ -30,7 +29,10 @@ def read_google_sheet(sheet_url):
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         return None
 
-# 🧠 แอปหลัก
+# ======================
+# 🧠 Streamlit App UI
+# ======================
+
 st.title("📊 วิเคราะห์งานที่พนักงานทำ")
 
 sheet_url = st.text_input("🔗 วางลิงก์ Google Sheet ที่แชร์แบบ Anyone (Viewer)")
