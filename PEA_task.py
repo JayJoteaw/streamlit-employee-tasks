@@ -35,8 +35,8 @@ def read_google_sheet(sheet_url):
         st.write("ชื่อคอลัมน์ใน Google Sheet:")
         st.write(df_raw.columns.tolist())
 
-        # ใช้ ftfy แก้ไขตัวอักษร
-        df_raw["รายการงานที่ทำ"] = df_raw["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(x))
+        # แก้ไขตัวอักษร
+        df_raw["รายการงานที่ทำ"] = df_raw["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(str(x)))
 
         st.success("✅ โหลดสำเร็จ")
         return df_raw
