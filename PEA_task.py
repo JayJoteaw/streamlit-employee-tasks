@@ -27,9 +27,13 @@ def read_google_sheet(sheet_url):
         df_raw = pd.read_csv(
             StringIO(response.text),
             encoding="utf-8",
-            header=1,  # ใช้แถวที่ 2 เป็น header
+            header=1,  # เริ่มต้นอ่านจากแถวที่ 2
             engine="python"
         )
+
+        # ตรวจสอบชื่อคอลัมน์ทั้งหมด
+        st.write("ชื่อคอลัมน์ใน Google Sheet:")
+        st.write(df_raw.columns.tolist())
 
         # ใช้ ftfy แก้ไขตัวอักษร
         df_raw["รายการงานที่ทำ"] = df_raw["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(x))
