@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from io import StringIO
 import re
+import ftfy
 
 # 🔁 แปลงลิงก์ Google Sheet เป็นลิงก์ CSV
 def convert_to_csv_url(google_sheet_url):
@@ -32,6 +33,9 @@ def read_google_sheet(sheet_url):
         df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
         df_clean = df_raw.drop(index=[0, 1]).reset_index(drop=True)
 
+        # ใช้ ftfy แก้ไขตัวอักษร
+        df_clean["รายการงานที่ทำ"] = df_clean["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(x))
+
         st.success("✅ โหลดสำเร็จ")
         return df_clean
 
@@ -53,7 +57,8 @@ if sheet_url:
         emp_id = st.text_input("🔍 ใส่รหัสพนักงานที่ต้องการค้นหา")
 
         if emp_id:
-            df_emp = df[df["รหัสพนักงาน"].astype(str) == emp_id]
+            # กรองข้อมูลโดยใช้ rstrip() เพื่อกำจัดช่องว่าง
+            df_emp = df[df["รหัสพนักงาน"].astype(str).str.strip() == emp_id.strip()]
 
             if df_emp.empty:
                 st.warning("ไม่พบรหัสพนักงานนี้ในข้อมูล")
