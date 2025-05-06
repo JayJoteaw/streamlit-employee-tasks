@@ -83,9 +83,6 @@ if sheet_url:
                 # ลบคอลัมน์หมายเลขที่เพิ่มขึ้น
                 job_count_df_sorted = job_count_df_sorted.drop(columns=["หมายเลข"])
 
-                # ลบคอลัมน์แรกที่ไม่ต้องการ
-                job_count_df_sorted = job_count_df_sorted.drop(columns=["หมายเลข"], errors='ignore')
-
                 # แสดงผล
                 st.subheader(f"จำนวนงานที่พนักงานรหัส {emp_id} ทำ")
                 st.dataframe(job_count_df_sorted)
