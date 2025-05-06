@@ -78,7 +78,7 @@ if sheet_url:
                 # นับจำนวนการทำงานที่แต่ละหัวข้อ
                 job_count_df = job_count_df.groupby("งานที่ทำ")["หมายเลข"].count().reset_index(name="จำนวนครั้ง")
 
-                # เรียงลำดับหมายเลข
+                # เรียงลำดับหมายเลขจากน้อยไปมาก
                 job_count_df = job_count_df.sort_values(by="หมายเลข", ascending=True)
 
                 # แสดงผลลัพธ์
