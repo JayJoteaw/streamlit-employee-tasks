@@ -92,3 +92,4 @@ if sheet_url:
 
                 # แสดงผลข้อความในกรอบสีเขียว
                 st.markdown(f'<div style="padding: 10px; border-radius: 5px; background-color: #e8f5e9; color: #388e3c; font-size: 18px; font-weight: bold;">พนักงานรหัส {emp_id} ทำงานรวมทั้งหมด {total_jobs} ครั้งในเดือนนี้</div>', unsafe_allow_html=True)
+
