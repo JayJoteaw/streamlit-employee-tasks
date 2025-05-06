@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import requests
 from io import StringIO
-import re
 import ftfy
+import re
 
 # 🔁 แปลงลิงก์ Google Sheet เป็นลิงก์ CSV
 def convert_to_csv_url(google_sheet_url):
@@ -23,22 +23,19 @@ def read_google_sheet(sheet_url):
         response = requests.get(csv_url)
         response.raise_for_status()
 
+        # ใช้แถวที่ 2 เป็นหัวตาราง
         df_raw = pd.read_csv(
             StringIO(response.text),
             encoding="utf-8",
-            header=None,
+            header=1,  # ใช้แถวที่ 2 เป็น header
             engine="python"
         )
 
-        # ใช้แถวที่ 2 เป็น header
-        df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
-        df_clean = df_raw[2:].reset_index(drop=True)
-
         # ใช้ ftfy แก้ไขตัวอักษร
-        df_clean["รายการงานที่ทำ"] = df_clean["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(x))
+        df_raw["รายการงานที่ทำ"] = df_raw["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(x))
 
         st.success("✅ โหลดสำเร็จ")
-        return df_clean
+        return df_raw
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
