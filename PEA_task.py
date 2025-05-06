@@ -68,6 +68,9 @@ if sheet_url:
                     tasks = [t.strip() for t in re.split(r'\s*,\s*', row) if t.strip()]
                     all_tasks.extend(tasks)
 
+                # ✅ แสดงข้อมูลจากทุกแถวของพนักงาน
+                st.write(f"ทั้งหมด {len(df_emp)} แถวของพนักงานรหัส {emp_id} ถูกใช้ในการคำนวณ")
+
                 # ✅ นับจำนวนหัวข้องาน
                 count = Counter(all_tasks)
 
