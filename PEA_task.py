@@ -61,11 +61,11 @@ if sheet_url:
                 st.warning("ไม่พบรหัสพนักงานนี้ในข้อมูล")
             else:
                 all_tasks = []
-                # ✅ เก็บหัวข้องานจากทุก row
+
+                # ✅ เก็บหัวข้องานจากทุก row โดยไม่ให้ซ้ำซ้อน
                 for row in df_emp["รายการงานที่ทำ"].dropna():
                     row = fix_text(row)  # แก้ mojibake ถ้ามี
-                    # ✅ ใช้ re.split ที่รองรับ comma และเว้นวรรค
-                    tasks = [t.strip() for t in re.split(r'[\s,]+', row) if t.strip()]
+                    tasks = [t.strip() for t in re.split(r'\s*,\s*', row) if t.strip()]
                     all_tasks.extend(tasks)
 
                 # ✅ นับจำนวนหัวข้องาน
