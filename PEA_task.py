@@ -74,8 +74,14 @@ if sheet_url:
                 # ✅ นับจำนวนหัวข้องาน
                 count = Counter(all_tasks)
 
+                # ✅ ตรวจสอบจำนวนครั้งในการทำงาน
                 st.subheader(f"พนักงานรหัส {emp_id} ทำงานทั้งหมด {sum(count.values())} ครั้ง")
                 st.dataframe(
                     pd.DataFrame(count.items(), columns=["หัวข้องาน", "จำนวนครั้ง"])
                     .sort_values(by="จำนวนครั้ง", ascending=False)
                 )
+
+                # ตรวจสอบหากต้องการข้อมูลทั้งหมดแบบละเอียด
+                detailed_count = df_emp["รายการงานที่ทำ"].value_counts()
+                st.write(f"จำนวนการทำงานตามหัวข้อทั้งหมด:")
+                st.dataframe(detailed_count)
