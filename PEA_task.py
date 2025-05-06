@@ -60,21 +60,22 @@ if sheet_url:
             if df_emp.empty:
                 st.warning("ไม่พบรหัสพนักงานนี้ในข้อมูล")
             else:
+                # ✅ เก็บหัวข้องานจากทุก row โดยไม่ให้ซ้ำซ้อน
                 all_tasks = []
 
-                # ✅ เก็บหัวข้องานจากทุก row โดยไม่ให้ซ้ำซ้อน
+                # ✅ ตรวจสอบข้อมูลในแต่ละแถวและนับจำนวนงาน
                 for row in df_emp["รายการงานที่ทำ"].dropna():
                     row = fix_text(row)  # แก้ mojibake ถ้ามี
                     tasks = [t.strip() for t in re.split(r'\s*,\s*', row) if t.strip()]
                     all_tasks.extend(tasks)
 
+                # ✅ นับจำนวนการทำงานในแต่ละหัวข้อ
+                count = Counter(all_tasks)
+
                 # ✅ แสดงข้อมูลจากทุกแถวของพนักงาน
                 st.write(f"ทั้งหมด {len(df_emp)} แถวของพนักงานรหัส {emp_id} ถูกใช้ในการคำนวณ")
 
                 # ✅ นับจำนวนหัวข้องาน
-                count = Counter(all_tasks)
-
-                # ✅ ตรวจสอบจำนวนครั้งในการทำงาน
                 st.subheader(f"พนักงานรหัส {emp_id} ทำงานทั้งหมด {sum(count.values())} ครั้ง")
                 st.dataframe(
                     pd.DataFrame(count.items(), columns=["หัวข้องาน", "จำนวนครั้ง"])
