@@ -30,8 +30,9 @@ def read_google_sheet(sheet_url):
             engine="python"
         )
 
+        # ใช้แถวที่ 2 เป็น header
         df_raw.columns = ["เวลา", "รหัสพนักงาน", "รายการงานที่ทำ"]
-        df_clean = df_raw.drop(index=[0, 1]).reset_index(drop=True)
+        df_clean = df_raw[2:].reset_index(drop=True)
 
         # ใช้ ftfy แก้ไขตัวอักษร
         df_clean["รายการงานที่ทำ"] = df_clean["รายการงานที่ทำ"].apply(lambda x: ftfy.fix_text(x))
